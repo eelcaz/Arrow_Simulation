@@ -1,26 +1,35 @@
 <!DOCTYPE html>
 <html>
 
-<script id="vertex-shader-texture" type="x-shader/x-vertex">
+<script id="arrow-vertex-shader" type="x-shader/x-vertex">
 
     attribute vec4 vPosition;
-    attribute vec4 vColor;
+    attribute vec2 vTexCoord;
+    attribute vec3 vNorm;
 
-    varying vec4 fColor;
+    varying vec2 fTexCoord;
+
+    varying vec3 fNorm;
 
     void main() {
         gl_Position = vPosition;
-        fColor = vColor;
+        fTexCoord = vTexCoord;
+        fNorm = vNorm;
     }
 
 </script>
 
-<script id="fragment-shader-texture" type="x-shader/x-fragment">
+<script id="arrow-fragment-shader" type="x-shader/x-fragment">
 
-    varying vec4 fColor;
+    precision mediump float;
+
+    uniform sampler2D texture;
+    varying vec2 fTexCoord;
+
+    varying vec3 fNorm;
 
     void main() {
-        gl_FragColor = fColor;
+        gl_FragColor = texture2D(texture, fTexCoord);
     }
 
 </script>
@@ -36,6 +45,7 @@
     <canvas id="gl-canvas" width="512" height="512">
         Whoopsies, you don't have HTML5 canvas support on this browser!
     </canvas>
+    <img id="arrow_image" src="worldmap_512x256.png" hidden></img>
 
 </body>
 
