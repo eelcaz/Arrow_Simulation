@@ -10,11 +10,13 @@
     varying vec2 fTexCoord;
 
     varying vec3 fNorm;
+    varying vec4 fColor;
 
     void main() {
         gl_Position = vPosition;
         fTexCoord = vTexCoord;
         fNorm = vNorm;
+        fColor = vPosition;
     }
 
 </script>
@@ -28,8 +30,11 @@
 
     varying vec3 fNorm;
 
+    varying vec4 fColor;
+
     void main() {
-        gl_FragColor = texture2D(texture, fTexCoord);
+        // gl_FragColor = texture2D(texture, fTexCoord);
+        gl_FragColor = fColor;
     }
 
 </script>
