@@ -37,8 +37,8 @@
     varying vec4 fColor;
 
     void main() {
-        // gl_FragColor = texture2D(texture, fTexCoord);
-        gl_FragColor = fColor;
+        gl_FragColor = texture2D(texture, fTexCoord);
+        // gl_FragColor = fColor;
     }
 
 </script>
@@ -54,7 +54,7 @@
     <canvas id="gl-canvas" width="512" height="512">
         Whoopsies, you don't have HTML5 canvas support on this browser!
     </canvas>
-    <img id="arrow_image" src="worldmap_512x256.png" hidden></img>
+    <img id="arrow_image" src="834.png" hidden></img>
 
 </body>
 
