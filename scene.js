@@ -26,6 +26,8 @@ var translateMatrixLoc;
 var modelViewMatrixLoc;
 var projectionMatrixLoc;
 
+var aspect;
+
 
 let count = 0;
 
@@ -119,7 +121,8 @@ window.addEventListener("keydown", function(){
 	switch(event.keyCode) {
 		case 38:  // up arrow key
             if (obj.rotateZ < 180.0) {
-                obj.rotateZ = Math.min((obj.rotateZ + 2.0), 50.0);
+                // obj.rotateZ = Math.min((obj.rotateZ + 2.0), 50.0);
+                obj.rotateZ = obj.rotateZ + 2.0;
             }
             else {
                 obj.rotateZ = ((obj.rotateZ + 2.0) % 360.0);
@@ -128,7 +131,8 @@ window.addEventListener("keydown", function(){
 			break;
 		case 40:  // down arrow key
             if (obj.rotateZ > 180){
-                obj.rotateZ = Math.max((obj.rotateZ - 2.0), 340.0);
+                // obj.rotateZ = Math.max((obj.rotateZ - 2.0), 340.0);
+                obj.rotateZ = obj.rotateZ - 2.0;
             }
             else {
                 obj.rotateZ = ((((obj.rotateZ - 2.0) % 360.0) + 360.0) % 360.0);
@@ -136,11 +140,13 @@ window.addEventListener("keydown", function(){
             console.log(obj.rotateZ);
 			break;
 		case 37: // left arrow key
-            obj.rotateY = Math.max(obj.rotateY - 2.0, 240.0);
+            // obj.rotateY = Math.max(obj.rotateY - 2.0, 240.0);
+            obj.rotateY = obj.rotateY + 2.0;
             console.log(obj.rotateY);
 			break;
 		case 39: // right arrow key
-            obj.rotateY = Math.min(obj.rotateY + 2.0, 300.0);
+            // obj.rotateY = Math.min(obj.rotateY + 2.0, 300.0);
+            obj.rotateY = obj.rotateY - 2.0;
             console.log(obj.rotateY);
 			break;
 		case 32: // spacebar
@@ -172,12 +178,11 @@ function setupAfterDataLoad() {
 
 window.onload = function init() {
     canvas = document.getElementById("gl-canvas");
-
     gl = WebGLUtils.setupWebGL(canvas);
     if(!gl) alert("WebGL isn't available");
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    
+    aspect = canvas.width / canvas.height;
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     arrow_texture_shader = initShaders(gl, "arrow-vertex-shader", "arrow-fragment-shader");
@@ -225,11 +230,16 @@ function renderObj(obj) {
         gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translate(0.0,0.0,0.0)));
     }
 
-    let modelViewMatrix = mat4();
-    let projectionMatrix = mat4();
-    //let modelViewMatrix = lookAt( eye, at, up );
-    //var scale = 1;
-	//let projectionMatrix = ortho(-1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale);
+    //let modelViewMatrix = mat4();
+    //let projectionMatrix = mat4();
+    var eye = vec3([0.0, -0.6, -1.0]);
+	var at = vec3([0.0, 0.0, 0.0]);
+	var up = vec3([0.0, 1.0, 0.0]);
+	// modelViewMatrix = lookAt(eye, at, up);
+    var modelViewMatrix = lookAt( eye, at, up );
+    var scale = 1;
+	// let projectionMatrix = ortho(-1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale);
+    var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 
