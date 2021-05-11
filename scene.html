@@ -17,7 +17,7 @@
     varying vec4 fColor;
 
     void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * rotateMatrix * translateMatrix * vPosition;
+        gl_Position = projectionMatrix * modelViewMatrix * translateMatrix * rotateMatrix * vPosition;
         fTexCoord = vTexCoord;
         fNorm = vNorm;
         fColor = vPosition;

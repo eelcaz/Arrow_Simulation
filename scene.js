@@ -61,7 +61,7 @@ function loadArrow(data){
 
     objectArray.push({iBuffer, vBuffer, vTexBuffer, vNormBuffer, 
                       numVerticesInAllObjFaces : numVerticesInAllArrowFaces, translateX : 0.0, translateY : 0.0, translateZ : 0.0,
-                      rotateY : 266.0, rotateZ : 2.0, velocityX : 0.0, velocityY : 0.0, velocityZ : 0.0, isMoving : false});
+                      rotateY : 270.0, rotateZ : 20.0, velocityX : 0.0, velocityY : 0.0, velocityZ : 0.0, isMoving : false});
 }
 
 // Properly orders the normals from the OBJ file.
@@ -213,9 +213,9 @@ function renderObj(obj) {
     gl.uniformMatrix4fv( rotateMatrixLoc, false, flatten(rotateMatrix) );
 
     if (obj.isMoving){
-        obj.translateX += obj.velocityZ;
+        obj.translateX += obj.velocityX;
         obj.translateY += obj.velocityY;
-        obj.translateZ -= obj.velocityX;
+        obj.translateZ += obj.velocityZ;
 
         let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
         gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translateMatrix) );
