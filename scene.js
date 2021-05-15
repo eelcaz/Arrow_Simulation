@@ -22,9 +22,12 @@ var vNormBuffer;
 var vNorm;
 
 var rotateMatrixLoc;
+var curRY;
+var curRZ;
 var translateMatrixLoc;
 var modelViewMatrixLoc;
 var projectionMatrixLoc;
+var gravity;
 
 var aspect;
 
@@ -63,7 +66,7 @@ function loadArrow(data){
 
     objectArray.push({iBuffer, vBuffer, vTexBuffer, vNormBuffer, 
                       numVerticesInAllObjFaces : numVerticesInAllArrowFaces, translateX : 0.0, translateY : 0.0, translateZ : 0.0,
-                      rotateY : 270.0, rotateZ : 20.0, velocityX : 0.0, velocityY : 0.0, velocityZ : 0.0, isMoving : false});
+                      rotateY : curRY, rotateZ : curRZ, velocityX : 0.0, velocityY : 0.0, velocityZ : 0.0, isMoving : false});
 }
 
 // Properly orders the normals from the OBJ file.
@@ -121,32 +124,36 @@ window.addEventListener("keydown", function(){
 	switch(event.keyCode) {
 		case 38:  // up arrow key
             if (obj.rotateZ < 180.0) {
-                // obj.rotateZ = Math.min((obj.rotateZ + 2.0), 50.0);
-                obj.rotateZ = obj.rotateZ + 2.0;
+                obj.rotateZ = Math.min((obj.rotateZ + 2.0), 15.0);
+                // obj.rotateZ = obj.rotateZ + 2.0;
             }
             else {
                 obj.rotateZ = ((obj.rotateZ + 2.0) % 360.0);
             }
+            curRZ = obj.rotateZ;
             console.log(obj.rotateZ);
 			break;
 		case 40:  // down arrow key
             if (obj.rotateZ > 180){
-                // obj.rotateZ = Math.max((obj.rotateZ - 2.0), 340.0);
-                obj.rotateZ = obj.rotateZ - 2.0;
+                obj.rotateZ = Math.max((obj.rotateZ - 2.0), 335.0);
+                // obj.rotateZ = obj.rotateZ - 2.0;
             }
             else {
                 obj.rotateZ = ((((obj.rotateZ - 2.0) % 360.0) + 360.0) % 360.0);
             }
+            curRZ = obj.rotateZ;
             console.log(obj.rotateZ);
 			break;
 		case 37: // left arrow key
-            // obj.rotateY = Math.max(obj.rotateY - 2.0, 240.0);
-            obj.rotateY = obj.rotateY + 2.0;
+            obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
+            // obj.rotateY = obj.rotateY + 2.0;
+            curRY = obj.rotateY;
             console.log(obj.rotateY);
 			break;
 		case 39: // right arrow key
-            // obj.rotateY = Math.min(obj.rotateY + 2.0, 300.0);
-            obj.rotateY = obj.rotateY - 2.0;
+            obj.rotateY = Math.max(obj.rotateY - 2.0, 255.0);
+            // obj.rotateY = obj.rotateY - 2.0;
+            curRY = obj.rotateY;
             console.log(obj.rotateY);
 			break;
 		case 32: // spacebar
@@ -196,6 +203,11 @@ window.onload = function init() {
     translateMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "translateMatrix" );
     modelViewMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "modelViewMatrix" );
     projectionMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "projectionMatrix" );
+    // curRY = 270.0;
+    // curRZ = -5.0;
+    gravity = 0.0001;
+    curRY = 270.0;
+    curRZ = 0.0;
     loadOBJFromPath("Arrow2.obj", loadedArrow, setupAfterDataLoad);
 }
 
@@ -213,14 +225,22 @@ function renderObj(obj) {
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vNormBuffer);
     gl.vertexAttribPointer(vNorm, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vNorm);
-
+    
     let rotateMatrix = mult(rotate(obj.rotateY, 0.0, 1.0, 0.0), rotate(obj.rotateZ, 0.0, 0.0, 1.0));
+    let tempMat = mult(translate(-0.25, -0.255, 0.0), rotateMatrix)
+    rotateMatrix = mult(tempMat, translate(0.25, 0.255, 0.0))
     gl.uniformMatrix4fv( rotateMatrixLoc, false, flatten(rotateMatrix) );
 
     if (obj.isMoving){
         obj.translateX += obj.velocityX;
         obj.translateY += obj.velocityY;
         obj.translateZ += obj.velocityZ;
+        obj.velocityY -= gravity;
+        if(obj.translateY < -1.0) {
+            obj.velocityY = 0.0;
+            obj.velocityX = 0.0;
+            obj.velocityZ = 0.0;
+        }
 
         let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
         gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translateMatrix) );
@@ -230,19 +250,6 @@ function renderObj(obj) {
         gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translate(0.0,0.0,0.0)));
     }
 
-    //let modelViewMatrix = mat4();
-    //let projectionMatrix = mat4();
-    var eye = vec3([0.0, -0.6, -1.0]);
-	var at = vec3([0.0, 0.0, 0.0]);
-	var up = vec3([0.0, 1.0, 0.0]);
-	// modelViewMatrix = lookAt(eye, at, up);
-    var modelViewMatrix = lookAt( eye, at, up );
-    var scale = 1;
-	// let projectionMatrix = ortho(-1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale);
-    var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
-    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
-    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
-
     gl.drawElements(gl.TRIANGLES, obj.numVerticesInAllObjFaces, gl.UNSIGNED_SHORT, 0);
 }
 
@@ -251,6 +258,20 @@ function render() {
 
     if (count % 500 == 0) console.log(objectArray);
     count++;
+
+    //let modelViewMatrix = mat4();
+    //let projectionMatrix = mat4();
+    var eye = vec3([-0.25, 0.255, -1.0]);
+	var at = vec3([-0.25, -0.0, 0.0]);
+	var up = vec3([0.0, 1.0, 0.0]);
+	// modelViewMatrix = lookAt(eye, at, up);
+    var modelViewMatrix = lookAt( eye, at, up );
+    var scale = 1;
+	// var projectionMatrix = ortho(-1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale, -1.0*scale, 10.0*scale);
+    var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
+    gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
+    gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+
     for (let obj of objectArray){
         renderObj(obj);
     }
