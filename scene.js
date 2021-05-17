@@ -30,6 +30,7 @@ var aspect;
 
 
 let count = 0;
+var prevArrow = false;
 
 function loadedArrow(data, _callback) {
     loadArrow(data);
@@ -38,7 +39,7 @@ function loadedArrow(data, _callback) {
 
 function loadArrow(data){
     arrow_object = loadOBJFromBuffer(data);
-    console.log(arrow_object);
+    //console.log(arrow_object);
     arrow_indices = arrow_object.i_verts;
     arrow_vertices = arrow_object.c_verts;
     numVerticesInAllArrowFaces = arrow_indices.length;
@@ -64,7 +65,12 @@ function loadArrow(data){
     objectArray.push({iBuffer, vBuffer, vTexBuffer, vNormBuffer, 
                       numVerticesInAllObjFaces : numVerticesInAllArrowFaces, translateX : 0.0, translateY : 0.0, translateZ : 0.0,
                       rotateY : 270.0, rotateZ : 20.0, velocityX : 0.0, velocityY : 0.0, velocityZ : 0.0, isMoving : false});
-}
+    if (prevArrow) {
+        objectArray[objectArray.length-1].rotateY = objectArray[objectArray.length-2].rotateY;
+        objectArray[objectArray.length-1].rotateZ= objectArray[objectArray.length-2].rotateZ; 
+    }
+    prevArrow = true;
+    }
 
 // Properly orders the normals from the OBJ file.
 function getOrderedNormalsFromObj(obj_object) {
@@ -159,9 +165,9 @@ window.addEventListener("keydown", function(){
             loadOBJFromPath("Arrow2.obj", loadArrow);
 			break;
 		}
-        console.log(`velocityX: ${obj.velocityX}`);
-        console.log(`velocityY: ${obj.velocityY}`);
-        console.log(`velocityZ: ${obj.velocityZ}`);
+        // console.log(`velocityX: ${obj.velocityX}`);
+        // console.log(`velocityY: ${obj.velocityY}`);
+        // console.log(`velocityZ: ${obj.velocityZ}`);
 
 }, true);
 
@@ -219,6 +225,7 @@ function renderObj(obj) {
 
     if (obj.isMoving){
         obj.translateX += obj.velocityX;
+        obj.velocityY -= 0.0005;
         obj.translateY += obj.velocityY;
         obj.translateZ += obj.velocityZ;
 
@@ -249,7 +256,7 @@ function renderObj(obj) {
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (count % 500 == 0) console.log(objectArray);
+    // if (count % 500 == 0) console.log(objectArray);
     count++;
     for (let obj of objectArray){
         renderObj(obj);
