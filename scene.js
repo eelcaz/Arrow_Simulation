@@ -169,7 +169,7 @@ window.addEventListener("keydown", function(){
             obj.velocityX = velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
             obj.velocityY = velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
             obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
-            
+            obj.velocity = 0.05;
             obj.isMoving = true;
             loadOBJFromPath("Arrow2.obj", loadArrow);
 			break;
@@ -215,7 +215,7 @@ window.onload = function init() {
 	light2WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light2WorldPosition");
     // curRY = 270.0;
     // curRZ = -5.0;
-    gravity = 0.0001;
+    gravity = 0.001;
     curRY = 270.0;
     curRZ = 0.0;
     point_light = [0, 100, 0];
@@ -239,11 +239,13 @@ function renderObj(obj) {
     gl.enableVertexAttribArray(vNorm);
     let direction = vec3(0.0, obj.rotateY, obj.rotateZ);
     if(obj.isMoving) {
-        if((obj.velocityY != 0 || obj.velocityZ != 0) && obj.translateY >= -1.0)
             // direction = vec3(normalize(vec3(obj.velocityX, obj.velocityY, obj.velocityZ)));
             // console.log(obj.velocityX, obj.velocityY, obj.velocityZ);
             // direction[2] = 360*direction[2];
-            obj.rotateZ -= 0.1;
+            obj.rotateZ = (180/Math.PI*Math.asin(obj.velocityY/obj.velocity) + 180/Math.PI*Math.acos(obj.velocityZ/obj.velocity))/2;
+            //console.log(obj.rotateZ);
+            //obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
+
             // direction[0] = 0.0;
             // direciton[2] = obj.rotateZ
             // direction[2] = 360*direction[2];
@@ -256,8 +258,8 @@ function renderObj(obj) {
 
     if (obj.isMoving){
         
-        if(obj.translateY < -1.5) {
-            
+        if(obj.translateY < -1.17) {
+            obj.isMoving = false;
         } else {
             obj.translateX += obj.velocityX;
             obj.translateY += obj.velocityY;
