@@ -30,6 +30,8 @@ var translateMatrixLoc;
 var modelViewMatrixLoc;
 var projectionMatrixLoc;
 var gravity;
+var start_velocity;
+var going_up;
 
 var aspect;
 
@@ -165,22 +167,39 @@ window.addEventListener("keydown", function(){
             // console.log(obj.rotateY);
 			break;
 		case 32: // spacebar
-            let velocity = 0.05;
-            obj.velocityX = velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
-            obj.velocityY = velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
-            obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
-            obj.velocity = 0.05;
-            obj.isMoving = true;
-            let d = new Date();
-            let t = d.getTime();
-            obj.lastRender = t;
-            loadOBJFromPath("Arrow2.obj", loadArrow);
+            if(going_up) {
+                start_velocity += 0.01;
+                if(start_velocity > 250.0/1000) going_up = false;
+            }
+            else {
+                start_velocity -= 0.01;
+                if(start_velocity < 10/1000.0) going_up = true;
+            }
+            document.getElementById("progress").value = start_velocity*1000;
 			break;
 		}
         // console.log(`velocityX: ${obj.velocityX}`);
         // console.log(`velocityY: ${obj.velocityY}`);
         // console.log(`velocityZ: ${obj.velocityZ}`);
 
+}, true);
+
+window.addEventListener("keyup", function(){
+    let obj = objectArray[objectArray.length-1];
+	switch(event.keyCode) {
+        case 32:
+            let velocity = start_velocity;
+            obj.velocityX = velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
+            obj.velocityY = velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
+            obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
+            obj.velocity = velocity;
+            obj.isMoving = true;
+            let d = new Date();
+            let t = d.getTime();
+            obj.lastRender = t;
+            loadOBJFromPath("Arrow2.obj", loadArrow);
+            break;
+    }
 }, true);
 
 function setupAfterDataLoad() {
@@ -222,6 +241,8 @@ window.onload = function init() {
     curRY = 270.0;
     curRZ = 0.0;
     point_light = [0, 100, 0];
+    start_velocity = 0.05;
+    going_up = true;
 	// origin = [0, 0, 0];
     loadOBJFromPath("Arrow2.obj", loadedArrow, setupAfterDataLoad);
 }
