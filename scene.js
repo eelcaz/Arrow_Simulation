@@ -320,6 +320,9 @@ function render() {
     var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+	gl.uniform3fv(light1WorldPosition, [0.0, 1000.0, 3000.0]);
+	gl.uniform3fv(light2WorldPosition, [0.0, 0.0, 0.0]);
+
 
     gl.uniformMatrix4fv(rotateMatrixLoc, false, flatten(mat4()));
     gl.uniformMatrix4fv(translateMatrixLoc, false, flatten(mat4()));
