@@ -2,10 +2,13 @@
 <html>
 
 <script id="arrow-vertex-shader" type="x-shader/x-vertex">
-
     attribute vec4 vPosition;
     attribute vec2 vTexCoord;
     attribute vec3 vNorm;
+
+    uniform vec3 light1WorldPosition;
+    uniform vec3 light2WorldPosition;
+
     uniform mat4 rotateMatrix;
     uniform mat4 translateMatrix;
     uniform mat4 modelViewMatrix;
@@ -14,33 +17,79 @@
     varying vec2 fTexCoord;
 
     varying vec3 fNorm;
-    varying vec4 fColor;
 
-    void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * translateMatrix * rotateMatrix * vPosition;
+    // light 1 is static point, light 2 and view are camera point--view included for code comprehension
+    varying vec3 fSurfaceToLight1;
+    varying vec3 fSurfaceToLight2;
+    varying vec3 fSurfaceToView;
+
+    void main()
+    {
+        gl_Position =  projectionMatrix*modelViewMatrix*translateMatrix*rotateMatrix*vPosition;
+
+        vec3 surfaceWorldPosition = (modelViewMatrix * translateMatrix*rotateMatrix * vPosition).xyz;
+
+        fSurfaceToLight1 = mat3(modelViewMatrix)*light1WorldPosition - surfaceWorldPosition;
+        fSurfaceToLight2 = light2WorldPosition - surfaceWorldPosition;
+
+        fSurfaceToView = fSurfaceToLight2;
+
         fTexCoord = vTexCoord;
-        fNorm = vNorm;
-        fColor = vPosition;
+        fNorm = mat3(modelViewMatrix * translateMatrix * rotateMatrix)*vNorm;
     }
-
 </script>
 
 <script id="arrow-fragment-shader" type="x-shader/x-fragment">
-
     precision mediump float;
-
+    
     uniform sampler2D texture;
     varying vec2 fTexCoord;
-
+    
     varying vec3 fNorm;
+    
+    varying vec3 fSurfaceToLight1;
+    varying vec3 fSurfaceToLight2;
+    varying vec3 fSurfaceToView;
+    
+    void main()
+    {
+        float L1 = 0.5;
+        float L2 = 0.8;
+    
+        vec4 ambient = vec4(0.05, 0.05, 0.05, 1);
+        // vec3 kd = vec3(0.4, 0.4, 0.4);
+        vec4 ks = vec4(0.5, 0.5, 0.5, 1);
+    
+        vec3 normal = normalize(fNorm);
+        
+        vec3 surfaceToLight1Direction = normalize(fSurfaceToLight1);
+        vec3 surfaceToViewDirection = normalize(fSurfaceToView);
+        vec3 halfVector1 = normalize(surfaceToLight1Direction + surfaceToViewDirection);
+    
+        vec3 surfaceToLight2Direction = normalize(fSurfaceToLight2);
+        vec3 halfVector2 = normalize(surfaceToLight2Direction + surfaceToViewDirection);
+        
+        float light1 = dot(normal, surfaceToLight1Direction);
+        float specular1 = max(dot(normal, halfVector1), 0.0);
+        float dullness = 200.0;
+        if(specular1 > 0.0) 
+            specular1 = pow(specular1, dullness);
+    
+        float light2 = dot(normal, surfaceToLight2Direction);
+        float specular2 = max(dot(normal, halfVector2), 0.0);
+        if(specular2 > 0.0)
+            specular2 = pow(specular2, dullness); 
+    
+        vec4 kd = texture2D(texture, fTexCoord);
+    
+        gl_FragColor = L1 * ambient + L2 * ambient;
 
-    varying vec4 fColor;
-
-    void main() {
-        gl_FragColor = texture2D(texture, fTexCoord);
-        // gl_FragColor = fColor;
+        gl_FragColor += kd*max(light1, 0.0)*L1 + kd*max(light2, 0.0)*L2;
+    
+        gl_FragColor += ks*specular1*L1 + ks*specular2*L2;
+        
+        // gl_FragColor += ambient;     
     }
-
 </script>
 
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>

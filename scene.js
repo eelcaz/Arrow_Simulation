@@ -20,6 +20,8 @@ var vTexCoord;
 var iBuffer;
 var vNormBuffer;
 var vNorm;
+var point_light;
+var light1WorldPosition, light2WorldPosition;			// Location of point lights for torus
 
 var rotateMatrixLoc;
 var curRY;
@@ -41,7 +43,7 @@ function loadedArrow(data, _callback) {
 
 function loadArrow(data){
     arrow_object = loadOBJFromBuffer(data);
-    console.log(arrow_object);
+    // console.log(arrow_object);
     arrow_indices = arrow_object.i_verts;
     arrow_vertices = arrow_object.c_verts;
     numVerticesInAllArrowFaces = arrow_indices.length;
@@ -131,7 +133,7 @@ window.addEventListener("keydown", function(){
                 obj.rotateZ = ((obj.rotateZ + 2.0) % 360.0);
             }
             curRZ = obj.rotateZ;
-            console.log(obj.rotateZ);
+            // console.log(obj.rotateZ);
 			break;
 		case 40:  // down arrow key
             if (obj.rotateZ > 180){
@@ -142,19 +144,19 @@ window.addEventListener("keydown", function(){
                 obj.rotateZ = ((((obj.rotateZ - 2.0) % 360.0) + 360.0) % 360.0);
             }
             curRZ = obj.rotateZ;
-            console.log(obj.rotateZ);
+            // console.log(obj.rotateZ);
 			break;
 		case 37: // left arrow key
             obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
             // obj.rotateY = obj.rotateY + 2.0;
             curRY = obj.rotateY;
-            console.log(obj.rotateY);
+            // console.log(obj.rotateY);
 			break;
 		case 39: // right arrow key
             obj.rotateY = Math.max(obj.rotateY - 2.0, 255.0);
             // obj.rotateY = obj.rotateY - 2.0;
             curRY = obj.rotateY;
-            console.log(obj.rotateY);
+            // console.log(obj.rotateY);
 			break;
 		case 32: // spacebar
             let velocity = 0.05;
@@ -166,9 +168,9 @@ window.addEventListener("keydown", function(){
             loadOBJFromPath("Arrow2.obj", loadArrow);
 			break;
 		}
-        console.log(`velocityX: ${obj.velocityX}`);
-        console.log(`velocityY: ${obj.velocityY}`);
-        console.log(`velocityZ: ${obj.velocityZ}`);
+        // console.log(`velocityX: ${obj.velocityX}`);
+        // console.log(`velocityY: ${obj.velocityY}`);
+        // console.log(`velocityZ: ${obj.velocityZ}`);
 
 }, true);
 
@@ -203,11 +205,15 @@ window.onload = function init() {
     translateMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "translateMatrix" );
     modelViewMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "modelViewMatrix" );
     projectionMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "projectionMatrix" );
+    light1WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light1WorldPosition");
+	light2WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light2WorldPosition");
     // curRY = 270.0;
     // curRZ = -5.0;
     gravity = 0.0001;
     curRY = 270.0;
     curRZ = 0.0;
+    point_light = [0, 100, 0];
+	// origin = [0, 0, 0];
     loadOBJFromPath("Arrow2.obj", loadedArrow, setupAfterDataLoad);
 }
 
