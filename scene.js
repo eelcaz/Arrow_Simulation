@@ -237,13 +237,34 @@ function renderObj(obj) {
     gl.bindBuffer(gl.ARRAY_BUFFER, obj.vNormBuffer);
     gl.vertexAttribPointer(vNorm, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vNorm);
-    
-    let rotateMatrix = mult(rotate(obj.rotateY, 0.0, 1.0, 0.0), rotate(obj.rotateZ, 0.0, 0.0, 1.0));
+    let direction = vec3(0.0, obj.rotateY, obj.rotateZ);
+    if(obj.isMoving) {
+        if((obj.velocityY != 0 || obj.velocityZ != 0) && obj.translateY >= -1.0)
+            // direction = vec3(normalize(vec3(obj.velocityX, obj.velocityY, obj.velocityZ)));
+            // console.log(obj.velocityX, obj.velocityY, obj.velocityZ);
+            // direction[2] = 360*direction[2];
+            obj.rotateZ -= 0.1;
+            // direction[0] = 0.0;
+            // direciton[2] = obj.rotateZ
+            // direction[2] = 360*direction[2];
+            // console.log(direction);
+    }
+    let rotateMatrix = mult(rotate(obj.rotateY, 0.0, 1.0, 0.0), rotate(direction[2], 0.0, 0.0, 1.0));
     let tempMat = mult(translate(-0.25, -0.255, 0.0), rotateMatrix)
     rotateMatrix = mult(tempMat, translate(0.25, 0.255, 0.0))
     gl.uniformMatrix4fv( rotateMatrixLoc, false, flatten(rotateMatrix) );
 
     if (obj.isMoving){
+        
+        if(obj.translateY < -1.5) {
+            
+        } else {
+            obj.translateX += obj.velocityX;
+            obj.translateY += obj.velocityY;
+            obj.translateZ += obj.velocityZ;
+            obj.velocityY -= gravity;
+        }
+            /*
         obj.translateX += obj.velocityX;
         obj.velocityY -= 0.0005;
         obj.translateY += obj.velocityY;
@@ -252,6 +273,7 @@ function renderObj(obj) {
         if(obj.translateY < -1.5) {
             obj.isMoving = false;
         }
+        */
     }
 
     let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
