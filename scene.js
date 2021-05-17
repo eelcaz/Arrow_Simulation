@@ -362,12 +362,12 @@ function generatePoints() {
     let vz = start_velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
     let travel_time = 2 * vy / gravity;
     let time = [0, travel_time / 3, 2 * travel_time / 3, travel_time];
-    let dists = [];
+    let dists = vec4();
     for(let i = 0; i < 4; i++) {
         let x1 = vx * time[i];
         let y1 = vy * time[i] + 1/2 * gravity * time[i]^2;
         let z1 = vz * time[i];
-        dists.push(vec3(x1, y1, z1));
+        dists[i] = vec3(x1, y1, z1);
     }
     return dists;
 }
