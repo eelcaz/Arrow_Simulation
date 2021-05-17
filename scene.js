@@ -316,7 +316,7 @@ function renderObj(obj) {
 
 function renderGround(){
     let ground_indices = [0, 1, 2, 1, 2, 3];
-    let ground_vertices = [-2.0, -2.0, -2.0, 2.0, -2.0, -2.0, -2.0, -2.0, 100.0, 2.0, -2.0, 100.0];
+    let ground_vertices = [-20.0, -2.0, -2.0, 20.0, -2.0, -2.0, -20.0, -2.0, 100.0, 20.0, -2.0, 100.0];
     let ground_normals = [vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0)];
     let ground_texture_coords = [vec2(0.5, 0.5), vec2(0.5, 0.5), vec2(0.5, 0.5), vec2(0.5, 0.5)];
     let numVerticesInAllGroundFaces = ground_indices.length;
