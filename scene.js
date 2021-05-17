@@ -35,6 +35,7 @@ var aspect;
 
 
 let count = 0;
+var prevArrow = false;
 
 function loadedArrow(data, _callback) {
     loadArrow(data);
@@ -49,7 +50,12 @@ function loadArrow(data){
     numVerticesInAllArrowFaces = arrow_indices.length;
     arrow_normals = getOrderedNormalsFromObj(arrow_object);
     arrow_texture_coords = getOrderedTextureCoordsFromObj(arrow_object);
+    console.log(arrow_indices);
+    console.log(arrow_vertices);
+    console.log(arrow_normals);
+    console.log(arrow_texture_coords);
 
+    
     iBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(arrow_indices), gl.STATIC_DRAW);
@@ -147,8 +153,8 @@ window.addEventListener("keydown", function(){
             // console.log(obj.rotateZ);
 			break;
 		case 37: // left arrow key
-            obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
-            // obj.rotateY = obj.rotateY + 2.0;
+            //obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
+             obj.rotateY = obj.rotateY + 2.0;
             curRY = obj.rotateY;
             // console.log(obj.rotateY);
 			break;
@@ -250,7 +256,7 @@ function renderObj(obj) {
 
     if (obj.isMoving){
         
-        if(obj.translateY < -1.0) {
+        if(obj.translateY < -1.5) {
             
         } else {
             obj.translateX += obj.velocityX;
@@ -258,23 +264,71 @@ function renderObj(obj) {
             obj.translateZ += obj.velocityZ;
             obj.velocityY -= gravity;
         }
-
-        let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
-        gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translateMatrix) );
+            /*
+        obj.translateX += obj.velocityX;
+        obj.velocityY -= 0.0005;
+        obj.translateY += obj.velocityY;
+        obj.translateZ += obj.velocityZ;
+        obj.velocityY -= gravity;
+        if(obj.translateY < -1.5) {
+            obj.isMoving = false;
+        }
+        */
     }
-    else {
-        //gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(mat4()));
-        gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translate(0.0,0.0,0.0)));
-    }
 
+    let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
+    gl.uniformMatrix4fv( translateMatrixLoc, false, flatten(translateMatrix) );
     gl.drawElements(gl.TRIANGLES, obj.numVerticesInAllObjFaces, gl.UNSIGNED_SHORT, 0);
+}
+
+function renderGround(){
+    let ground_indices = [0, 1, 2, 1, 2, 3];
+    let ground_vertices = [-2.0, -2.0, -2.0, 2.0, -2.0, -2.0, -2.0, -2.0, 20.0, 2.0, -2.0, 20.0];
+    let ground_normals = [vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0)];
+    let ground_texture_coords = [vec2(0.5, 0.5), vec2(0.5, 0.5), vec2(0.5, 0.5), vec2(0.5, 0.5)];
+    let numVerticesInAllGroundFaces = ground_indices.length;
+
+    iBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(ground_indices), gl.STATIC_DRAW);
+
+    vBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ground_vertices), gl.STATIC_DRAW);
+
+    vTexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vTexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flatten(ground_texture_coords)), gl.STATIC_DRAW);
+
+    vNormBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vNormBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(flatten(ground_normals)), gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iBuffer);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.vertexAttribPointer(vPosition, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vTexBuffer);
+    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vTexCoord);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vNormBuffer);
+    gl.vertexAttribPointer(vNorm, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vNorm);
+
+    gl.drawElements(gl.TRIANGLES, numVerticesInAllGroundFaces, gl.UNSIGNED_SHORT, 0);
+    
 }
 
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    if (count % 500 == 0) console.log(objectArray);
-    count++;
+    
+
+    //if (count % 500 == 0) console.log(objectArray);
+    //count++;
 
     //let modelViewMatrix = mat4();
     //let projectionMatrix = mat4();
@@ -288,6 +342,11 @@ function render() {
     var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
     gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(modelViewMatrix));
     gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
+
+    gl.uniformMatrix4fv(rotateMatrixLoc, false, flatten(mat4()));
+    gl.uniformMatrix4fv(translateMatrixLoc, false, flatten(mat4()));
+
+    renderGround();
 
     for (let obj of objectArray){
         renderObj(obj);
