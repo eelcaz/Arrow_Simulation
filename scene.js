@@ -171,6 +171,9 @@ window.addEventListener("keydown", function(){
             obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
             obj.velocity = 0.05;
             obj.isMoving = true;
+            let d = new Date();
+            let t = d.getTime();
+            obj.lastRender = t;
             loadOBJFromPath("Arrow2.obj", loadArrow);
 			break;
 		}
@@ -238,13 +241,17 @@ function renderObj(obj) {
     gl.vertexAttribPointer(vNorm, 3, gl.FLOAT, false, 0, 0);
     gl.enableVertexAttribArray(vNorm);
     let direction = vec3(0.0, obj.rotateY, obj.rotateZ);
+    let d = new Date();
+    let elapsed = (d.getTime()-obj.lastRender)/15;
+    obj.lastRender = d.getTime();
+    
     if(obj.isMoving) {
             // direction = vec3(normalize(vec3(obj.velocityX, obj.velocityY, obj.velocityZ)));
             // console.log(obj.velocityX, obj.velocityY, obj.velocityZ);
             // direction[2] = 360*direction[2];
             //console.log(`${obj.rotateZ} ${obj.velocityY} ${(obj.velocityY/obj.velocity)}`);
             obj.velocity = Math.sqrt(Math.pow(obj.velocityX, 2)+Math.pow(obj.velocityY, 2)+Math.pow(obj.velocityZ, 2));
-            obj.rotateZ -= 180/Math.PI*Math.asin(0.003/obj.velocity)*Math.abs((obj.velocityY/obj.velocity));
+            obj.rotateZ -= elapsed * (180/Math.PI*Math.asin(0.003/obj.velocity)*Math.abs((obj.velocityY/obj.velocity)));
             //obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
 
             // direction[0] = 0.0;
@@ -265,7 +272,7 @@ function renderObj(obj) {
             obj.translateX += obj.velocityX;
             obj.translateY += obj.velocityY;
             obj.translateZ += obj.velocityZ;
-            obj.velocityY -= gravity;
+            obj.velocityY -= (elapsed * 1.3 * gravity);
         }
             /*
         obj.translateX += obj.velocityX;
