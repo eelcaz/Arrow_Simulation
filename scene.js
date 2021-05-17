@@ -242,8 +242,9 @@ function renderObj(obj) {
             // direction = vec3(normalize(vec3(obj.velocityX, obj.velocityY, obj.velocityZ)));
             // console.log(obj.velocityX, obj.velocityY, obj.velocityZ);
             // direction[2] = 360*direction[2];
-            obj.rotateZ = (180/Math.PI*Math.asin(obj.velocityY/obj.velocity) + 180/Math.PI*Math.acos(obj.velocityZ/obj.velocity))/2;
-            //console.log(obj.rotateZ);
+            //console.log(`${obj.rotateZ} ${obj.velocityY} ${(obj.velocityY/obj.velocity)}`);
+            obj.velocity = Math.sqrt(Math.pow(obj.velocityX, 2)+Math.pow(obj.velocityY, 2)+Math.pow(obj.velocityZ, 2));
+            obj.rotateZ -= 180/Math.PI*Math.asin(0.003/obj.velocity)*Math.abs((obj.velocityY/obj.velocity));
             //obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
 
             // direction[0] = 0.0;
