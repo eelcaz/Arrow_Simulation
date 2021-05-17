@@ -176,6 +176,8 @@ window.addEventListener("keydown", function(){
                 if(start_velocity < 10/1000.0) going_up = true;
             }
             document.getElementById("progress").value = start_velocity*1000;
+            let points = generatePoints();
+            console.log(points);
 			break;
 		}
         // console.log(`velocityX: ${obj.velocityX}`);
@@ -353,6 +355,23 @@ function renderGround(){
     
 }
 
+function generatePoints() {
+    let obj = objectArray[0];
+    let vx = start_velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
+    let vy = start_velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
+    let vz = start_velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
+    let travel_time = 2 * vy / gravity;
+    let time = [0, travel_time / 3, 2 * travel_time / 3, travel_time];
+    let dists = [];
+    for(let i = 0; i < 4; i++) {
+        let x1 = vx * time[i];
+        let y1 = vy * time[i] + 1/2 * gravity * time[i]^2;
+        let z1 = vz * time[i];
+        dists.push(vec3(x1, y1, z1));
+    }
+    return dists;
+}
+
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -379,12 +398,14 @@ function render() {
 
     gl.uniformMatrix4fv(rotateMatrixLoc, false, flatten(mat4()));
     gl.uniformMatrix4fv(translateMatrixLoc, false, flatten(mat4()));
+    
+    
+
 
     renderGround();
 
     for (let obj of objectArray){
         renderObj(obj);
     }
-
     requestAnimationFrame(render);
 }
