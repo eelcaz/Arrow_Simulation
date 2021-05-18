@@ -186,6 +186,8 @@ window.addEventListener("keydown", function(){
 
 }, true);
 
+//var finalt;
+
 window.addEventListener("keyup", function(){
     let obj = objectArray[objectArray.length-1];
 	switch(event.keyCode) {
@@ -198,6 +200,7 @@ window.addEventListener("keyup", function(){
             obj.isMoving = true;
             let d = new Date();
             let t = d.getTime();
+            //finalt = t;
             obj.lastRender = t;
             loadOBJFromPath("Arrow2.obj", loadArrow);
             break;
@@ -239,7 +242,7 @@ window.onload = function init() {
 	light2WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light2WorldPosition");
     // curRY = 270.0;
     // curRZ = -5.0;
-    gravity = 0.001;
+    gravity = 1.3 * 0.001;
     curRY = 270.0;
     curRZ = 0.0;
     point_light = [0, 100, 0];
@@ -290,12 +293,16 @@ function renderObj(obj) {
     if (obj.isMoving){
         
         if(obj.translateY < -1.17) {
+            // console.log(obj.velocityY);
+            //let d = new Date();
+            //let t = d.getTime();
+            //console.log(t - finalt);
             obj.isMoving = false;
         } else {
-            obj.translateX += obj.velocityX;
-            obj.translateY += obj.velocityY;
-            obj.translateZ += obj.velocityZ;
-            obj.velocityY -= (elapsed * 1.3 * gravity);
+            obj.translateX += obj.velocityX*elapsed;
+            obj.translateY += obj.velocityY*elapsed;
+            obj.translateZ += obj.velocityZ*elapsed;
+            obj.velocityY -= (elapsed * gravity);
         }
             /*
         obj.translateX += obj.velocityX;
@@ -356,18 +363,21 @@ function renderGround(){
 }
 
 function generatePoints() {
-    let obj = objectArray[0];
+    let obj = objectArray[objectArray.length-1];
     let vx = start_velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
     let vy = start_velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
     let vz = start_velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
+    let vfy = -Math.sqrt(Math.pow(vy, 2) + 2*gravity*1.17);
     
-    let travel_time = 2 * vy / gravity;
-    console.log(vx, vy, vz, gravity, travel_time);
-    let time = [0, travel_time / 3, 2 * travel_time / 3, travel_time];
+    //let travel_time = 2 * vy / gravity;
+    let travel_time = -(vfy-vy)/gravity;
+    //console.log('travel time', travel_time);
+    //console.log(vx, vy, vz, gravity, travel_time);
+    let time = [0, travel_time / 3.0, 2 * travel_time / 3.0, travel_time];
     let dists = mat4();
     for(let i = 0; i < 4; i++) {
         let x1 = vx * time[i];
-        let y1 = vy * time[i] + 1/2 * gravity * time[i]^2;
+        let y1 = vy * time[i] - 1/2.0 * gravity * Math.pow(time[i], 2);
         let z1 = vz * time[i];
         dists[i] = vec4(x1, y1, z1, 1);
     }
@@ -378,7 +388,7 @@ function generatePoints() {
         vec4(-4.5, 13.5, -13.5, 4.5));
     let result = mult(matrix, dists);
     //console.log(matrix);
-    //console.log(dists);
+    console.log(dists);
     //console.log(result);
     return dists;
 }
