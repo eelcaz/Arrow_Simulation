@@ -176,7 +176,7 @@ window.addEventListener("keydown", function(){
                 if(start_velocity < 10/1000.0) going_up = true;
             }
             document.getElementById("progress").value = start_velocity*1000;
-            let points = generatePoints();
+            let coefficients = generateCoefficients();
             // console.log(points);
 			break;
 		}
@@ -362,7 +362,7 @@ function renderGround(){
     
 }
 
-function generatePoints() {
+function generateCoefficients() {
     let obj = objectArray[objectArray.length-1];
     let vx = start_velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
     let vy = start_velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
@@ -390,7 +390,7 @@ function generatePoints() {
     //console.log(matrix);
     console.log(dists);
     //console.log(result);
-    return dists;
+    return result;
 }
 
 function render() {
