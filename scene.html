@@ -92,6 +92,34 @@
     }
 </script>
 
+<script id="curve-vertex-shader" type="x-shader/x-vertex">
+    // TODO: Edit the vertex shader.
+    attribute vec4 vPosition;
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+    uniform mat4 translateMatrix;
+
+    varying vec4 fColor;
+    
+    void main()
+    {
+        gl_Position = projectionMatrix*modelViewMatrix*translateMatrix*vPosition;
+        fColor = vec4(1.0, 0.0, 0.0, 1.0);
+        
+    }
+    </script>
+    
+    <script id="curve-fragment-shader" type="x-shader/x-fragment">
+    precision mediump float;
+    
+    varying vec4 fColor;
+    
+    void main()
+    {
+       gl_FragColor = fColor;
+    }
+    </script>
+
 <script type="text/javascript" src="../Common/webgl-utils.js"></script>
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
@@ -104,7 +132,7 @@
     <canvas id="gl-canvas" width="512" height="512">
         Whoopsies, you don't have HTML5 canvas support on this browser!
     </canvas>
-    <img id="arrow_image" src="download.png" hidden></img>
+    <img id="arrow_image" src="download (3).png" hidden></img>
 
 </body>
 

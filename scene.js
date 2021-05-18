@@ -3,6 +3,7 @@
 var canvas;
 var gl;
 var arrow_texture_shader;
+var curve_shader;
 
 var objectArray = [];
 var numVerticesInAllArrowFaces;
@@ -13,8 +14,8 @@ var arrow_object;
 var arrow_normals;
 var arrow_texture_coords;
 
-var vBuffer;
-var vPosition;
+var vBuffer, vBuffer2;
+var vPosition, vPosition2;
 var vTexBuffer;
 var vTexCoord;
 var iBuffer;
@@ -26,18 +27,19 @@ var light1WorldPosition, light2WorldPosition;			// Location of point lights for 
 var rotateMatrixLoc;
 var curRY;
 var curRZ;
-var translateMatrixLoc;
-var modelViewMatrixLoc;
-var projectionMatrixLoc;
+var translateMatrixLoc, translateMatrixLoc2;
+var modelViewMatrixLoc, modelViewMatrixLoc2;
+var projectionMatrixLoc, projectionMatrixLoc2;
 var gravity;
 var start_velocity;
 var going_up;
-
+var curvePoints;
 var aspect;
 
 
 let count = 0;
 var prevArrow = false;
+var curve = false;
 
 function loadedArrow(data, _callback) {
     loadArrow(data);
@@ -135,7 +137,7 @@ window.addEventListener("keydown", function(){
 		case 38:  // up arrow key
             if (obj.rotateZ < 180.0) {
                 obj.rotateZ = Math.min((obj.rotateZ + 2.0), 15.0);
-                // obj.rotateZ = obj.rotateZ + 2.0;
+                //obj.rotateZ = obj.rotateZ + 2.0;
             }
             else {
                 obj.rotateZ = ((obj.rotateZ + 2.0) % 360.0);
@@ -155,8 +157,8 @@ window.addEventListener("keydown", function(){
             // console.log(obj.rotateZ);
 			break;
 		case 37: // left arrow key
-            //obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
-             obj.rotateY = obj.rotateY + 2.0;
+            obj.rotateY = Math.min(obj.rotateY + 2.0, 305.0);
+            //obj.rotateY = obj.rotateY + 2.0;
             curRY = obj.rotateY;
             // console.log(obj.rotateY);
 			break;
@@ -176,8 +178,11 @@ window.addEventListener("keydown", function(){
                 if(start_velocity < 10/1000.0) going_up = true;
             }
             document.getElementById("progress").value = start_velocity*1000;
-            let coefficients = generateCoefficients();
-            // console.log(points);
+            let coefficients = flatten(generateCoefficients());
+            console.log(coefficients);
+            curvePoints = generateInterpolatedCurve(coefficients);
+            curve = true;
+            console.log(curvePoints);
 			break;
 		}
         // console.log(`velocityX: ${obj.velocityX}`);
@@ -185,6 +190,20 @@ window.addEventListener("keydown", function(){
         // console.log(`velocityZ: ${obj.velocityZ}`);
 
 }, true);
+
+function generateInterpolatedCurve(coefficients)
+{
+    let arr = [];
+    for (let i = 0.0; i<=1.0; i+=0.001){
+        let x = coefficients[0]+coefficients[1]*i+coefficients[2]*Math.pow(i, 2)+coefficients[3]*Math.pow(i, 3);
+        let y = coefficients[4]+coefficients[5]*i+coefficients[6]*Math.pow(i, 2)+coefficients[7]*Math.pow(i, 3);
+        let z = coefficients[8]+coefficients[9]*i+coefficients[10]*Math.pow(i, 2)+coefficients[11]*Math.pow(i, 3);
+        arr.push(x);
+        arr.push(y);
+        arr.push(z);
+    }
+    return arr;
+}
 
 //var finalt;
 
@@ -230,14 +249,23 @@ window.onload = function init() {
     arrow_texture_shader = initShaders(gl, "arrow-vertex-shader", "arrow-fragment-shader");
     gl.useProgram(arrow_texture_shader);
 
+    curve_shader = initShaders(gl, "curve-vertex-shader", "curve-fragment-shader");
+
     vPosition = gl.getAttribLocation(arrow_texture_shader, "vPosition");
     vTexCoord = gl.getAttribLocation(arrow_texture_shader, "vTexCoord");
     vNorm = gl.getAttribLocation(arrow_texture_shader, "vNorm");
 
+    vPosition2 = gl.getAttribLocation(curve_shader, "vPosition");
+
     rotateMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "rotateMatrix" );
     translateMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "translateMatrix" );
+    translateMatrixLoc2 = gl.getUniformLocation( curve_shader, "translateMatrix" );
     modelViewMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "modelViewMatrix" );
+    modelViewMatrixLoc2 = gl.getUniformLocation( curve_shader, "modelViewMatrix" );
+    
     projectionMatrixLoc = gl.getUniformLocation( arrow_texture_shader, "projectionMatrix" );
+    projectionMatrixLoc2 = gl.getUniformLocation( curve_shader, "projectionMatrix" );
+    
     light1WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light1WorldPosition");
 	light2WorldPosition = 	gl.getUniformLocation( arrow_texture_shader, "light2WorldPosition");
     // curRY = 270.0;
@@ -272,18 +300,8 @@ function renderObj(obj) {
     obj.lastRender = d.getTime();
     
     if(obj.isMoving) {
-            // direction = vec3(normalize(vec3(obj.velocityX, obj.velocityY, obj.velocityZ)));
-            // console.log(obj.velocityX, obj.velocityY, obj.velocityZ);
-            // direction[2] = 360*direction[2];
-            //console.log(`${obj.rotateZ} ${obj.velocityY} ${(obj.velocityY/obj.velocity)}`);
             obj.velocity = Math.sqrt(Math.pow(obj.velocityX, 2)+Math.pow(obj.velocityY, 2)+Math.pow(obj.velocityZ, 2));
             obj.rotateZ -= elapsed * (180/Math.PI*Math.asin(0.003/obj.velocity)*Math.abs((obj.velocityY/obj.velocity)));
-            //obj.velocityZ = velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
-
-            // direction[0] = 0.0;
-            // direciton[2] = obj.rotateZ
-            // direction[2] = 360*direction[2];
-            // console.log(direction);
     }
     let rotateMatrix = mult(rotate(obj.rotateY, 0.0, 1.0, 0.0), rotate(direction[2], 0.0, 0.0, 1.0));
     let tempMat = mult(translate(-0.25, -0.255, 0.0), rotateMatrix)
@@ -293,10 +311,6 @@ function renderObj(obj) {
     if (obj.isMoving){
         
         if(obj.translateY < -1.17) {
-            // console.log(obj.velocityY);
-            //let d = new Date();
-            //let t = d.getTime();
-            //console.log(t - finalt);
             obj.isMoving = false;
         } else {
             obj.translateX += obj.velocityX*elapsed;
@@ -304,16 +318,6 @@ function renderObj(obj) {
             obj.translateZ += obj.velocityZ*elapsed;
             obj.velocityY -= (elapsed * gravity);
         }
-            /*
-        obj.translateX += obj.velocityX;
-        obj.velocityY -= 0.0005;
-        obj.translateY += obj.velocityY;
-        obj.translateZ += obj.velocityZ;
-        obj.velocityY -= gravity;
-        if(obj.translateY < -1.5) {
-            obj.isMoving = false;
-        }
-        */
     }
 
     let translateMatrix = translate(obj.translateX, obj.translateY, obj.translateZ);
@@ -387,16 +391,43 @@ function generateCoefficients() {
         vec4(9, -22.5, 18, -4.5),
         vec4(-4.5, 13.5, -13.5, 4.5));
     let result = mult(matrix, dists);
-    //console.log(matrix);
+    console.log(matrix);
     console.log(dists);
-    //console.log(result);
+    console.log(result);
     return result;
 }
 
+function renderInterpolatedCurve(){
+    gl.useProgram(curve_shader);
+    vBuffer2 = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer2);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(curvePoints), gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer2);
+    gl.vertexAttribPointer(vPosition2, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vPosition2);
+
+    var eye = vec3([-0.25, 0.255, -1.0]);
+	var at = vec3([-0.25, -0.0, 0.0]);
+	var up = vec3([0.0, 1.0, 0.0]);
+	// modelViewMatrix = lookAt(eye, at, up);
+    var modelViewMatrix = lookAt( eye, at, up );
+    var scale = 1;
+	// var projectionMatrix = ortho(-1.0*scale, 1.0*scale, -1.0*scale, 1.0*scale, -1.0*scale, 10.0*scale);
+    var projectionMatrix = perspective(50.0, aspect, 0.1 * scale, 100 * scale);
+    gl.uniformMatrix4fv(modelViewMatrixLoc2, false, flatten(modelViewMatrix));
+    gl.uniformMatrix4fv(projectionMatrixLoc2, false, flatten(projectionMatrix));
+    let translateMatrix = translate(-0.25, 0.0, -0.8);
+    gl.uniformMatrix4fv(translateMatrixLoc2, false, flatten(translateMatrix));
+
+    gl.drawArrays(gl.LINES, 0, curvePoints.length);
+}
+
 function render() {
+
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    
+    gl.useProgram(arrow_texture_shader);
 
     //if (count % 500 == 0) console.log(objectArray);
     //count++;
@@ -419,14 +450,18 @@ function render() {
 
     gl.uniformMatrix4fv(rotateMatrixLoc, false, flatten(mat4()));
     gl.uniformMatrix4fv(translateMatrixLoc, false, flatten(mat4()));
-    
-    
-
-
     renderGround();
+
+    
 
     for (let obj of objectArray){
         renderObj(obj);
     }
+
+    if (curve){
+        renderInterpolatedCurve();
+    }
+    gl.useProgram(arrow_texture_shader);
+
     requestAnimationFrame(render);
 }
