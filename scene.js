@@ -52,10 +52,10 @@ function loadArrow(data){
     numVerticesInAllArrowFaces = arrow_indices.length;
     arrow_normals = getOrderedNormalsFromObj(arrow_object);
     arrow_texture_coords = getOrderedTextureCoordsFromObj(arrow_object);
-    console.log(arrow_indices);
-    console.log(arrow_vertices);
-    console.log(arrow_normals);
-    console.log(arrow_texture_coords);
+    // console.log(arrow_indices);
+    // console.log(arrow_vertices);
+    // console.log(arrow_normals);
+    // console.log(arrow_texture_coords);
 
     
     iBuffer = gl.createBuffer();
@@ -177,7 +177,7 @@ window.addEventListener("keydown", function(){
             }
             document.getElementById("progress").value = start_velocity*1000;
             let points = generatePoints();
-            console.log(points);
+            // console.log(points);
 			break;
 		}
         // console.log(`velocityX: ${obj.velocityX}`);
@@ -360,15 +360,26 @@ function generatePoints() {
     let vx = start_velocity * Math.cos(Math.PI * obj.rotateY / 180.0);
     let vy = start_velocity * Math.sin(Math.PI * obj.rotateZ / 180.0);
     let vz = start_velocity * Math.cos(Math.PI * obj.rotateZ / 180.0);
+    
     let travel_time = 2 * vy / gravity;
+    console.log(vx, vy, vz, gravity, travel_time);
     let time = [0, travel_time / 3, 2 * travel_time / 3, travel_time];
-    let dists = vec4();
+    let dists = mat4();
     for(let i = 0; i < 4; i++) {
         let x1 = vx * time[i];
         let y1 = vy * time[i] + 1/2 * gravity * time[i]^2;
         let z1 = vz * time[i];
-        dists[i] = vec3(x1, y1, z1);
+        dists[i] = vec4(x1, y1, z1, 1);
     }
+    let matrix = mat4(
+        vec4(1, 0, 0, 0),
+        vec4(-5.5, 9, -4.5, 1),
+        vec4(9, -22.5, 18, -4.5),
+        vec4(-4.5, 13.5, -13.5, 4.5));
+    let result = mult(matrix, dists);
+    //console.log(matrix);
+    //console.log(dists);
+    //console.log(result);
     return dists;
 }
 
